@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>second realtime  communication with webrtc</title>
+    <style>
+        video{
+            float: left;
+        }
+    </style>
+</head>
+<body>
+        <h1>reatime communication with webrtc</h1>
+        <video autoplay id="localVideo"></video>
+        <video autoplay id="remoteVideo"></video>
+        <div>
+            <button id="startButton">start</button>
+            <button id="callButton">call</button>
+            <button id="hangupButton">Hang up</button>
+        </div>
+        <script src="https://webrtc.github.io/adapter/adapter-latest.js"></script>
+        <script src="main.js"></script>
+</body>
+</html>

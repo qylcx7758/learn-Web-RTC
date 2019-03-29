@@ -30,3 +30,7 @@ socket.on('joined', function(room, clientId) {
 socket.on('log', function(array) {
   console.log.apply(console, array);
 });
+
+// console.log=function(g){
+//   // alert(g)
+// }

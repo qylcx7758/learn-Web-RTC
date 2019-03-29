@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>webRtc-音视频处理-learn-01</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- <link rel="stylesheet" type="text/css" media="screen" href="main.css"> -->
+  <style>
+      html,body{
+          background-color: pink;
+          height: 100%;
+      }
+      video{
+          max-width: 80%;
+          /* width: 400px;
+          height: 300px; */
+          /* 如果同视频源的比例不一致的话，画面不会拉伸，而是等于同比例扩展后的最近边。另一边不在变化*/
+          /* 比如： 高度是*视频源比例之后的高度，垂直居中  */
+             /* 比如：高度同元素样式尺寸一致，宽度自适应，水平居中  */
+
+             /* 视频中的颜色过滤 */
+             /* filter: blur(4px) invert(1) opacity(0.5); */
+
+             /* 变色的说 */
+             filter: hue-rotate(180deg) saturate(200%);
+    
+            }
+  </style>
+</head>
+<body>
+    <h1>webrtc-01</h1>
+    <!-- video标签中的width和height属性优先级低于样式中的宽高设置，同时设置时，生效的是样式中设置的宽高 -->
+    <!-- 不设置autoplay，则不自动播放，只会看到第一帧画面， -->
+    <!-- playsinline 是用在Ios下的网页视频窗口化 -->
+    <video id="ovideo" autoplay width="600" height="400"></video>
+    <!-- <script src="js/main.js"></script> -->
+</body>
+</html>
