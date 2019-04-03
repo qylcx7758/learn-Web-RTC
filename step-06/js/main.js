@@ -1,8 +1,8 @@
 'use strict';
 
 /****************************************************************************
-* Initial setup
-****************************************************************************/
+ * Initial setup
+ ****************************************************************************/
 
 // var configuration = {
 //   'iceServers': [{
@@ -42,46 +42,46 @@ if (!room) {
 
 
 /****************************************************************************
-* Signaling server
-****************************************************************************/
+ * Signaling server
+ ****************************************************************************/
 
 // Connect to the signaling server
 var socket = io.connect();
 
-socket.on('ipaddr', function(ipaddr) {
+socket.on('ipaddr', function (ipaddr) {
   console.log('Server IP address is: ' + ipaddr);
   // updateRoomURL(ipaddr);
 });
 
-socket.on('created', function(room, clientId) {
+socket.on('created', function (room, clientId) {
   console.log('Created room', room, '- my client ID is', clientId);
   isInitiator = true;
   grabWebCamVideo();
 });
 
-socket.on('joined', function(room, clientId) {
+socket.on('joined', function (room, clientId) {
   console.log('This peer has joined room', room, 'with client ID', clientId);
   isInitiator = false;
   createPeerConnection(isInitiator, configuration);
   grabWebCamVideo();
 });
 
-socket.on('full', function(room) {
+socket.on('full', function (room) {
   alert('Room ' + room + ' is full. We will create a new room for you.');
   window.location.hash = '';
   window.location.reload();
 });
 
-socket.on('ready', function() {
+socket.on('ready', function () {
   console.log('Socket is ready');
   createPeerConnection(isInitiator, configuration);
 });
 
-socket.on('log', function(array) {
+socket.on('log', function (array) {
   console.log.apply(console, array);
 });
 
-socket.on('message', function(message) {
+socket.on('message', function (message) {
   console.log('Client received message:', message);
   signalingMessageCallback(message);
 });
@@ -94,13 +94,13 @@ if (location.hostname.match(/localhost|127\.0\.0/)) {
 }
 
 // Leaving rooms and disconnecting from peers.
-socket.on('disconnect', function(reason) {
+socket.on('disconnect', function (reason) {
   console.log(`Disconnected: ${reason}.`);
   sendBtn.disabled = true;
   snapAndSendBtn.disabled = true;
 });
 
-socket.on('bye', function(room) {
+socket.on('bye', function (room) {
   console.log(`Peer leaving room ${room}.`);
   sendBtn.disabled = true;
   snapAndSendBtn.disabled = true;
@@ -110,23 +110,23 @@ socket.on('bye', function(room) {
   }
 });
 
-window.addEventListener('unload', function() {
+window.addEventListener('unload', function () {
   console.log(`Unloading window. Notifying peers in ${room}.`);
   socket.emit('bye', room);
 });
 
 
 /**
-* Send message to signaling server
-*/
+ * Send message to signaling server
+ */
 function sendMessage(message) {
   console.log('Client sending message: ', message);
   socket.emit('message', message);
 }
 
 /**
-* Updates URL on the page so that users can copy&paste it to their peers.
-*/
+ * Updates URL on the page so that users can copy&paste it to their peers.
+ */
 // function updateRoomURL(ipaddr) {
 //   var url;
 //   if (!ipaddr) {
@@ -138,26 +138,26 @@ function sendMessage(message) {
 // }
 
 /****************************************************************************
-* User media (webcam)
-****************************************************************************/
+ * User media (webcam)
+ ****************************************************************************/
 
 function grabWebCamVideo() {
   console.log('Getting user media (video) ...');
   navigator.mediaDevices.getUserMedia({
-    audio: false,
-    video: true
-  })
-  .then(gotStream)
-  .catch(function(e) {
-    alert('getUserMedia() error: ' + e.name);
-  });
+      audio: false,
+      video: true
+    })
+    .then(gotStream)
+    .catch(function (e) {
+      alert('getUserMedia() error: ' + e.name);
+    });
 }
 
 function gotStream(stream) {
   console.log('getUserMedia video stream URL:', stream);
   window.stream = stream; // stream available to console
   video.srcObject = stream;
-  video.onloadedmetadata = function() {
+  video.onloadedmetadata = function () {
     photo.width = photoContextW = video.videoWidth;
     photo.height = photoContextH = video.videoHeight;
     console.log('gotStream with width and height:', photoContextW, photoContextH);
@@ -166,8 +166,8 @@ function gotStream(stream) {
 }
 
 /****************************************************************************
-* WebRTC peer connection and data channel
-****************************************************************************/
+ * WebRTC peer connection and data channel
+ ****************************************************************************/
 
 var peerConn;
 var dataChannel;
@@ -175,14 +175,14 @@ var dataChannel;
 function signalingMessageCallback(message) {
   if (message.type === 'offer') {
     console.log('Got offer. Sending answer to peer.');
-    peerConn.setRemoteDescription(new RTCSessionDescription(message), function() {},
-                                  logError);
+    peerConn.setRemoteDescription(new RTCSessionDescription(message), function () {},
+      logError);
     peerConn.createAnswer(onLocalSessionCreated, logError);
 
   } else if (message.type === 'answer') {
     console.log('Got answer.');
-    peerConn.setRemoteDescription(new RTCSessionDescription(message), function() {},
-                                  logError);
+    peerConn.setRemoteDescription(new RTCSessionDescription(message), function () {},
+      logError);
 
   } else if (message.type === 'candidate') {
     peerConn.addIceCandidate(new RTCIceCandidate({
@@ -194,43 +194,43 @@ function signalingMessageCallback(message) {
 
 function createPeerConnection(isInitiator, config) {
   console.log('Creating Peer connection as initiator?', isInitiator, 'config:',
-              config);
+    config);
   peerConn = new RTCPeerConnection(config);
 
-// send any ice candidates to the other peer
-peerConn.onicecandidate = function(event) {
-  console.log('icecandidate event:', event);
-  if (event.candidate) {
-    sendMessage({
-      type: 'candidate',
-      label: event.candidate.sdpMLineIndex,
-      id: event.candidate.sdpMid,
-      candidate: event.candidate.candidate
-    });
-  } else {
-    console.log('End of candidates.');
-  }
-};
-
-if (isInitiator) {
-  console.log('Creating Data Channel');
-  dataChannel = peerConn.createDataChannel('photos');
-  onDataChannelCreated(dataChannel);
-
-  console.log('Creating an offer');
-  peerConn.createOffer(onLocalSessionCreated, logError);
-} else {
-  peerConn.ondatachannel = function(event) {
-    console.log('ondatachannel:', event.channel);
-    dataChannel = event.channel;
-    onDataChannelCreated(dataChannel);
+  // send any ice candidates to the other peer
+  peerConn.onicecandidate = function (event) {
+    console.log('icecandidate event:', event);
+    if (event.candidate) {
+      sendMessage({
+        type: 'candidate',
+        label: event.candidate.sdpMLineIndex,
+        id: event.candidate.sdpMid,
+        candidate: event.candidate.candidate
+      });
+    } else {
+      console.log('End of candidates.');
+    }
   };
-}
+
+  if (isInitiator) {
+    console.log('Creating Data Channel');
+    dataChannel = peerConn.createDataChannel('photos');
+    onDataChannelCreated(dataChannel);
+
+    console.log('Creating an offer');
+    peerConn.createOffer(onLocalSessionCreated, logError);
+  } else {
+    peerConn.ondatachannel = function (event) {
+      console.log('ondatachannel:', event.channel);
+      dataChannel = event.channel;
+      onDataChannelCreated(dataChannel);
+    };
+  }
 }
 
 function onLocalSessionCreated(desc) {
   console.log('local session created:', desc);
-  peerConn.setLocalDescription(desc, function() {
+  peerConn.setLocalDescription(desc, function () {
     console.log('sending local desc:', peerConn.localDescription);
     sendMessage(peerConn.localDescription);
   }, logError);
@@ -239,7 +239,7 @@ function onLocalSessionCreated(desc) {
 function onDataChannelCreated(channel) {
   console.log('onDataChannelCreated:', channel);
 
-  channel.onopen = function() {
+  channel.onopen = function () {
     console.log('CHANNEL opened!!!');
     sendBtn.disabled = false;
     snapAndSendBtn.disabled = false;
@@ -252,7 +252,7 @@ function onDataChannelCreated(channel) {
   }
 
   channel.onmessage = (adapter.browserDetails.browser === 'firefox') ?
-  receiveDataFirefoxFactory() : receiveDataChromeFactory();
+    receiveDataFirefoxFactory() : receiveDataChromeFactory();
 }
 
 function receiveDataChromeFactory() {
@@ -273,11 +273,11 @@ function receiveDataChromeFactory() {
     console.log('count: ' + count);
 
     if (count === buf.byteLength) {
-// we're done: all data chunks have been received
-console.log('Done. Rendering photo.');
-renderPhoto(buf);
-}
-};
+      // we're done: all data chunks have been received
+      console.log('Done. Rendering photo.');
+      renderPhoto(buf);
+    }
+  };
 }
 
 function receiveDataFirefoxFactory() {
@@ -295,14 +295,14 @@ function receiveDataFirefoxFactory() {
     parts.push(event.data);
     count += event.data.size;
     console.log('Got ' + event.data.size + ' byte(s), ' + (total - count) +
-                ' to go.');
+      ' to go.');
 
     if (count === total) {
       console.log('Assembling payload');
       var buf = new Uint8ClampedArray(total);
-      var compose = function(i, pos) {
+      var compose = function (i, pos) {
         var reader = new FileReader();
-        reader.onload = function() {
+        reader.onload = function () {
           buf.set(new Uint8ClampedArray(this.result), pos);
           if (i + 1 === parts.length) {
             console.log('Done. Rendering photo.');
@@ -320,8 +320,8 @@ function receiveDataFirefoxFactory() {
 
 
 /****************************************************************************
-* Aux functions, mostly UI-related
-****************************************************************************/
+ * Aux functions, mostly UI-related
+ ****************************************************************************/
 
 function snapPhoto() {
   photoContext.drawImage(video, 0, 0, photo.width, photo.height);
@@ -329,39 +329,39 @@ function snapPhoto() {
 }
 
 function sendPhoto() {
-// Split data channel message in chunks of this byte length.
-var CHUNK_LEN = 64000;
-console.log('width and height ', photoContextW, photoContextH);
-var img = photoContext.getImageData(0, 0, photoContextW, photoContextH),
-len = img.data.byteLength,
-n = len / CHUNK_LEN | 0;
+  // Split data channel message in chunks of this byte length.
+  var CHUNK_LEN = 64000;
+  console.log('width and height ', photoContextW, photoContextH);
+  var img = photoContext.getImageData(0, 0, photoContextW, photoContextH),
+    len = img.data.byteLength,
+    n = len / CHUNK_LEN | 0;
 
-console.log('Sending a total of ' + len + ' byte(s)');
+  console.log('Sending a total of ' + len + ' byte(s)');
 
-if (!dataChannel) {
-  logError('Connection has not been initiated. ' +
-    'Get two peers in the same room first');
-  return;
-} else if (dataChannel.readyState === 'closed') {
-  logError('Connection was lost. Peer closed the connection.');
-  return;
-}
+  if (!dataChannel) {
+    logError('Connection has not been initiated. ' +
+      'Get two peers in the same room first');
+    return;
+  } else if (dataChannel.readyState === 'closed') {
+    logError('Connection was lost. Peer closed the connection.');
+    return;
+  }
 
-dataChannel.send(len);
+  dataChannel.send(len);
 
-// split the photo and send in chunks of about 64KB
-for (var i = 0; i < n; i++) {
-  var start = i * CHUNK_LEN,
-  end = (i + 1) * CHUNK_LEN;
-  console.log(start + ' - ' + (end - 1));
-  dataChannel.send(img.data.subarray(start, end));
-}
+  // split the photo and send in chunks of about 64KB
+  for (var i = 0; i < n; i++) {
+    var start = i * CHUNK_LEN,
+      end = (i + 1) * CHUNK_LEN;
+    console.log(start + ' - ' + (end - 1));
+    dataChannel.send(img.data.subarray(start, end));
+  }
 
-// send the reminder, if any
-if (len % CHUNK_LEN) {
-  console.log('last ' + len % CHUNK_LEN + ' byte(s)');
-  dataChannel.send(img.data.subarray(n * CHUNK_LEN));
-}
+  // send the reminder, if any
+  if (len % CHUNK_LEN) {
+    console.log('last ' + len % CHUNK_LEN + ' byte(s)');
+    dataChannel.send(img.data.subarray(n * CHUNK_LEN));
+  }
 }
 
 function snapAndSend() {
@@ -384,13 +384,13 @@ function renderPhoto(data) {
 }
 
 function show() {
-  Array.prototype.forEach.call(arguments, function(elem) {
+  Array.prototype.forEach.call(arguments, function (elem) {
     elem.style.display = null;
   });
 }
 
 function hide() {
-  Array.prototype.forEach.call(arguments, function(elem) {
+  Array.prototype.forEach.call(arguments, function (elem) {
     elem.style.display = 'none';
   });
 }

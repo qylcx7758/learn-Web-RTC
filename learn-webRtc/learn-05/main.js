@@ -120,7 +120,7 @@ var constraints={
 console.log('getting user media with constraints ',constraints);
 
 if(location.hostname !== 'localhost'){
-    requestTrun(
+    requestTurn(
         'https://computeengineondemand.appspot.com/turn?username=41784574&key=4080218913'
     )
 }
@@ -156,6 +156,7 @@ function createPeerConnection(){
     }catch(e){
         console.log('failed to create peerconnection, exception: '+e.message);
         alert('cannot create rtcpeerconnection object.')
+        return;
     }
 }
 
@@ -164,7 +165,7 @@ function handleIceCandidate(event){
     console.log('icecandidate event : ',event);
     if(event.candidate){
         sendMessage({
-            typr:'candidate',
+            type:'candidate',
             label:event.candidate.sdpMLineIndex,
             id:event.candidate.sdpMid,
             candidate:event.candidate.candidate
@@ -204,7 +205,7 @@ function setLocalAndSendMessage(sessionDescription){
 
 
 function onCreateSessionDescriptionError(error){
-    TrackEvent('failed to create session description: '+error.toString());
+    trace('failed to create session description: '+error.toString());
 }
 
 
